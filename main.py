@@ -6,7 +6,7 @@ Desc:       AA228 project
 """
 
 from montecarlo import MonteCarlo
-from Visualization import Visualization as viz
+from visualization import Visualization as viz
 
 def main():
     world_size = (20,20)       # size of box world (width,height)
