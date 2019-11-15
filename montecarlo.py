@@ -86,6 +86,3 @@ class MonteCarlo():
             self.step = 0
         time.sleep(0.05)
         return self.constrain_to_state(state)
-
-
-        return state
