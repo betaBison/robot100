@@ -4,22 +4,26 @@ Date:       Nov 12, 2019
 Desc:       Monte Carlo Search
 """
 
-import numpy as np
 import time
+import logging
+import random
+
+import numpy as np
 
 class MonteCarlo():
     """
     """
-    def __init__(self,goal,agent_origin,obstacles):
+    def __init__(self, gridworld, mode=0):
         """
         Initializes monte carlo array
 
         Input(s)
+        mode:   0 - direct
+                1 - random
+                2 - monte carlo
         """
-        self.goal = goal
-        self.agent_origin = agent_origin
-        self.dummy_state_setup() # for visualization testing
-
+        self.gridworld = gridworld
+        self.mode = mode
 
     def compute(self):
         """
@@ -30,9 +34,28 @@ class MonteCarlo():
         Output(s):
             action
         """
-        action = None
-
-        return action
+        actions = []
+        if self.mode == 0:
+            for agent in self.gridworld.agents:
+                dist = np.inf
+                nearest_goal = None
+                for goal in self.gridworld.goals:
+                    if (((goal.pos[0]-agent.pos[0])**2 
+                        + (goal.pos[1]-agent.pos[1])**2)**0.5 < dist):
+                        nearest_goal = goal
+                dist = nearest_goal.pos - agent.pos
+                logging.debug("Dist to goal: (%d, %d)" % (dist[0], dist[1]))
+                if abs(dist[0]) > abs(dist[1]):
+                    action = 0 if dist[0] < 0 else 1
+                else:
+                    action = 2 if dist[1] > 0 else 3
+                if (dist[0] == 0 and dist[1] == 0):
+                    action = None
+                actions.append(action)    
+        elif self.mode == 1:
+            for agent in self.gridworld.agents:
+                actions.append(random.randint(0, 3))
+        return actions
 
     def constrain_to_state(self,input):
         """
