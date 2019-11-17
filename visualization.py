@@ -12,6 +12,15 @@ import pyqtgraph as pg
 from PyQt5 import QtWidgets
 import time
 
+RED                 = np.array([1., 0., 0., 1])
+GREEN               = np.array([0., 1., 0., 1])
+BLUE                = np.array([0., 0., 1., 1])
+YELLOW              = np.array([1., 1., 0., 1])
+DARK_YELLOW         = np.array([0.7, 0.7, 0., 1])
+GREY                = np.array([0.6, 0.6, 0.6, 1])
+LIGHT_GREY          = np.array([0.9, 0.9, 0.9, 1])
+TRANSPARENT_GREY    = np.array([0.7, 0.7, 0.7, 0.4])
+
 class Visualization(QtCore.QThread):
     def __init__(self, gridworld, view_axis=False):
         """
@@ -128,10 +137,7 @@ class Visualization(QtCore.QThread):
                                [points[7], points[4], points[12]]])
 
         bound_mesh_colors = np.zeros((32, 3, 4))
-        bound_mesh_colors[:,:,0] = 0.7
-        bound_mesh_colors[:,:,1] = 0.7
-        bound_mesh_colors[:,:,2] = 0.7
-        bound_mesh_colors[:,:,3] = 0.4
+        bound_mesh_colors[:,:] = TRANSPARENT_GREY
 
         return bound_mesh,bound_mesh_colors
     
@@ -234,24 +240,9 @@ class Visualization(QtCore.QThread):
                          [points[4], points[7], points[5]],  # Top
                          [points[7], points[5], points[6]]])  # Top
 
-        #   define the colors for each face of triangular mesh
-        # red = np.array([1., 0., 0., 1])
-        # green = np.array([0., 1., 0., 1])
-        # blue = np.array([0., 0., 1., 1])
-        # yellow = np.array([1., 1., 0., 1])
-        grey = np.array([0.6, 0.6, 0.6, 1])
-        light_grey = np.array([0.9, 0.9, 0.9, 1])
         meshColors = np.empty((10, 3, 4), dtype=np.float32)
-        meshColors[0] = grey
-        meshColors[1] = grey
-        meshColors[2] = grey
-        meshColors[3] = grey
-        meshColors[4] = grey
-        meshColors[5] = grey
-        meshColors[6] = grey
-        meshColors[7] = grey
-        meshColors[8] = light_grey
-        meshColors[9] = light_grey
+        meshColors[:8] = GREY          # faces
+        meshColors[8:] = LIGHT_GREY     # top
         return mesh, meshColors
 
     def draw_agents(self):
@@ -298,30 +289,31 @@ class Visualization(QtCore.QThread):
             self.w.addItem(goal_3d)
             self.goals_3d.append(goal_3d)
 
-    def update(self):
+    def run(self):
         """
         Desc: updates visualization
 
         Input(s):
-            state: array [x,y,z] of agent's current position in 3D
+            none
         Output(s):
             none
         """
-        for i, agent in enumerate(self.gridworld.agents):
-            if agent.next_action == 0:
-                self.agents_3d[i].translate(-self.gridworld.world_delta,0,0)
-            elif agent.next_action == 1:
-                self.agents_3d[i].translate(self.gridworld.world_delta,0,0)
-            elif agent.next_action == 2:
-                self.agents_3d[i].translate(0,self.gridworld.world_delta,0)
-            elif agent.next_action == 3:
-                self.agents_3d[i].translate(0,-self.gridworld.world_delta,0)
-            elif agent.next_action == None:
-                pass
+        while True:
+            for i, agent in enumerate(self.gridworld.agents):
+                if agent.next_action == 0:
+                    self.agents_3d[i].translate(-self.gridworld.world_delta,0,0)
+                elif agent.next_action == 1:
+                    self.agents_3d[i].translate(self.gridworld.world_delta,0,0)
+                elif agent.next_action == 2:
+                    self.agents_3d[i].translate(0,self.gridworld.world_delta,0)
+                elif agent.next_action == 3:
+                    self.agents_3d[i].translate(0,-self.gridworld.world_delta,0)
+                elif agent.next_action == None:
+                    pass
+                agent.set_next_action(None)
 
-        self.update_detected_obstacles()
-
-        self.app.processEvents()
+            self.update_detected_obstacles()
+            self.app.processEvents()
 
     def update_detected_obstacles(self):
         """
@@ -332,43 +324,20 @@ class Visualization(QtCore.QThread):
         Output(s):
             none
         """
-        immediate_obstacles_indexes = []
-        for i, obstacle in enumerate(self.gridworld.obstacles):
-            for agent in self.gridworld.agents:
-                if ((obstacle.pos[0] - agent.pos[0] <= self.gridworld.agent_vision_depth) &
-                    (obstacle.pos[1] - agent.pos[1] <= self.gridworld.agent_vision_depth)):
-                    immediate_obstacles_indexes.append(i)
+        immediate_obstacles_indexes = np.array([], dtype=int)
+        for agent in self.gridworld.agents:
+            immediate_obstacles_indexes = np.concatenate([immediate_obstacles_indexes, agent.obs])
 
-        yellow = np.array([1., 1., 0., 1])
-        dark_yellow = np.array([0.7, 0.7, 0., 1])
-        grey = np.array([0.6, 0.6, 0.6, 1])
-        light_grey = np.array([0.9, 0.9, 0.9, 1])
-
-        for ii in range(int(self.fullMeshcolors.shape[0]/10)):
+        for obstacle_index in range(int(self.fullMeshcolors.shape[0]/10)):
             meshColors = np.empty((10, 3, 4), dtype=np.float32)
-            if ii in immediate_obstacles_indexes:
-                meshColors[0] = yellow
-                meshColors[1] = yellow
-                meshColors[2] = yellow
-                meshColors[3] = yellow
-                meshColors[4] = yellow
-                meshColors[5] = yellow
-                meshColors[6] = yellow
-                meshColors[7] = yellow
-                meshColors[8] = dark_yellow
-                meshColors[9] = dark_yellow
+            if obstacle_index in immediate_obstacles_indexes:
+                meshColors[:8] = YELLOW
+                meshColors[8:] = DARK_YELLOW
             else:
-                meshColors[0] = grey
-                meshColors[1] = grey
-                meshColors[2] = grey
-                meshColors[3] = grey
-                meshColors[4] = grey
-                meshColors[5] = grey
-                meshColors[6] = grey
-                meshColors[7] = grey
-                meshColors[8] = light_grey
-                meshColors[9] = light_grey
-            self.fullMeshcolors[ii*10:10*(ii+1),:,:] = meshColors
+                meshColors[:8] = GREY
+                meshColors[8:] = LIGHT_GREY
+            
+            self.fullMeshcolors[obstacle_index*10:10*(obstacle_index+1),:,:] = meshColors
 
         self.obstacles_3d = gl.GLMeshItem(vertexes= self.fullMesh,  # defines the triangular mesh (Nx3x3)
                       vertexColors= self.fullMeshcolors,  # defines mesh colors (Nx1)

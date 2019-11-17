@@ -17,7 +17,7 @@ from obstacles import Obstacle
 from goal import Goal
 
 class GridWorld():
-    def __init__(self, world_size, world_delta, obs_percent, agent_vision_depth, rewards=10, penalty=-10, barrier_mode=0):
+    def __init__(self, world_size, world_delta, obs_percent, agent_vision_depth, phase, rewards=10, penalty=-10, barrier_mode=0):
         """
         Desc: runs when instance of Visualization class is created
 
@@ -40,11 +40,9 @@ class GridWorld():
         self.spots = self.generate_spots()
 
         # initialize gridworld elements
-        self.obstacles = self.generate_obstacles(penalty)
+        self.obstacle_indices, self.obstacles = self.generate_obstacles(penalty)
         self.goals = [self.generate_goal(rewards)]
-        self.agents = [self.generate_agent(0)]
-        print(self.spots)
-
+        self.agents = [self.generate_agent(0, phase)]
         # # initialize visualization
         # self.visualization = Visualization(self)
 
@@ -88,7 +86,7 @@ class GridWorld():
         for pos in obstacle_indices:
             logging.info(pos)
         obstacles = [Obstacle(pos, penalty) for pos in obstacle_indices]
-        return obstacles
+        return obstacle_indices, obstacles
 
     def generate_goal(self, reward):
         """
@@ -105,7 +103,7 @@ class GridWorld():
         self.spots[initial_pos[1], initial_pos[0], 2] = 2
         return Goal(initial_pos, reward)
 
-    def generate_agent(self, initial_reward):
+    def generate_agent(self, initial_reward, phase):
         """
         Desc: Generate agent on the gridworld. This is done by choosing a
             random spot.
@@ -118,7 +116,7 @@ class GridWorld():
         initial_pos = self.choose_spot()
         logging.info("Initial agent pos: (%d, %d)" % (initial_pos[0], initial_pos[1]))
         self.spots[initial_pos[1], initial_pos[0], 2] = 1
-        return Agent(initial_pos, initial_reward)
+        return Agent(initial_pos, initial_reward, phase)
 
     def choose_spot(self):
         """
@@ -136,12 +134,10 @@ class GridWorld():
             z_location: random z location
         """
         available_spots = self.spots[np.where(self.spots[:,:,2] == 0)]
-        print(np.shape(available_spots)[0])
         if np.shape(available_spots)[0] == 0:
             logging.error("No more spots left")
             return None
         chosen_spot = available_spots[random.randint(0, np.shape(available_spots)[0] - 1)]
-        print(chosen_spot)
         return [chosen_spot[0], chosen_spot[1]]
 
     def update(self, actions):
@@ -154,20 +150,33 @@ class GridWorld():
             none
         """
         for i, agent in enumerate(self.agents):
-            logging.debug('Agent %d- x: %d, %d' % (i, agent.pos[0], agent.pos[1]))
-            agent.set_next_action(actions[i])
+            logging.debug('Agent %d: %d, %d, %d' % (i, agent.pos[0], agent.pos[1], agent.reward))
             next_pos = agent.next_state(actions[i])
             
-            # for obstacle in self.obstacles:
-            #     if np.array_equal(next_pos, obstacle.pos):
-            #         actions[i] = None
-            #     if ((next_pos[0] < 0) or 
-            #         (next_pos[0] >= self.world_size[0]) or 
-            #         (next_pos[1] < 0) or
-            #         (next_pos[1] >= self.world_size[1])):
-            #         actions[i] = None
-            # next_pos = agent.next_state(actions[i])
+            if not agent.phase:
+                for obstacle_index in agent.obs:
+                    if np.array_equal(next_pos, self.obstacles[obstacle_index].pos):
+                        logging.debug('Agent %d was blocked by obstacle at (%d, %d)' % (i,
+                                                                                self.obstacles[obstacle_index].pos[0],
+                                                                                self.obstacles[obstacle_index].pos[1]))
+                        actions[i] = None
+            if ((next_pos[0] < 0) or 
+                (next_pos[0] >= self.world_size[0]) or 
+                (next_pos[1] < 0) or
+                (next_pos[1] >= self.world_size[1])):
+                # can add penalty for trying to leave world here
+                logging.debug('Agent %d attempted to travel out of world' % i)
+                actions[i] = None
+            next_pos = agent.next_state(actions[i])
             agent.set_next_state(next_pos)
-            # for goal in self.goals:
-            #     if np.array_equal(agent.pos, goal.pos):
-            #         agent.update_reward(goal.reward)
+            agent.set_next_action(actions[i])
+            nearby_obs = np.where(np.all(np.abs(self.obstacle_indices-agent.pos) <= self.agent_vision_depth, axis=1))[0]
+            agent.observe(nearby_obs)
+            for goal in self.goals:
+                if np.array_equal(agent.pos, goal.pos):
+                    agent.update_reward(goal.reward)
+            if agent.phase:
+                for obstacle_index in agent.obs:
+                    if np.array_equal(next_pos, self.obstacles[obstacle_index].pos):
+                        agent.update_reward(self.obstacles[obstacle_index].penalty)
+
