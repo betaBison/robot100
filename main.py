@@ -27,11 +27,11 @@ def main(args):
     logging.info("Visuals created")
     mc = MonteCarlo(gridworld, mode=args.method)
     logging.info("Initialized Monte Carlo method")
-    
+
     mc.start()
     viz.start()
     viz.app.exec_()
-        
+
 
 if __name__ == '__main__':
     import argparse

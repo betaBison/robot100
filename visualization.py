@@ -1,5 +1,5 @@
 """
-Author(s):  D. Knowles
+Author(s):  AA228 Group 100
 Date:       Nov 12, 2019
 Desc:       3D visualization of grid world
 """
@@ -57,7 +57,7 @@ class Visualization(QtCore.QThread):
         # draw agents and goals
         self.draw_agents()
         self.draw_goals()
-    
+
     def draw_grid(self):
         """
         Desc: Visualize the grid
@@ -71,8 +71,8 @@ class Visualization(QtCore.QThread):
         grid.setSize(x=self.gridworld.world_size[0],y=self.gridworld.world_size[1])
         grid.setSpacing(x=self.gridworld.world_delta, y=self.gridworld.world_delta)
         grid.translate(self.gridworld.world_size[0]/2., self.gridworld.world_size[1]/2., 0.)    # translate so that it starts at (0,0)
-        
-        self.w.addItem(grid)    
+
+        self.w.addItem(grid)
 
     def get_boundary(self):
         """
@@ -140,7 +140,7 @@ class Visualization(QtCore.QThread):
         bound_mesh_colors[:,:] = TRANSPARENT_GREY
 
         return bound_mesh,bound_mesh_colors
-    
+
     def draw_boundaries(self):
         """
         Desc: Draw the gridworld boundaries
@@ -157,7 +157,7 @@ class Visualization(QtCore.QThread):
                                  smooth=False)                  # speeds up rendering
                                  #computeNormals=False)         # speeds up rendering
         boundary.setGLOptions('additive')                       # allows them to be semi-transparent
-        self.w.addItem(boundary)   
+        self.w.addItem(boundary)
 
     def draw_axes(self):
         """
@@ -167,7 +167,7 @@ class Visualization(QtCore.QThread):
             none
         Output(s):
             none
-        """        
+        """
         # add all three colored axes
         xaxis_pts = np.array([[0.0,0.0,0.0],            # north axis start and end point
                         [1.1*self.gridworld.world_size[0],0.0,0.0]])
@@ -180,7 +180,7 @@ class Visualization(QtCore.QThread):
         zaxis_pts = np.array([[0.0,0.0,0.0],            # down axis start and end point
                         [0.0,0.0,5.0*self.gridworld.world_delta]])
         zaxis = gl.GLLinePlotItem(pos=zaxis_pts,color=pg.glColor('b'),width=3.0)   # create line plot item
-        self.w.addItem(zaxis)   
+        self.w.addItem(zaxis)
 
     def draw_obstacles(self):
         """
@@ -336,7 +336,7 @@ class Visualization(QtCore.QThread):
             else:
                 meshColors[:8] = GREY
                 meshColors[8:] = LIGHT_GREY
-            
+
             self.fullMeshcolors[obstacle_index*10:10*(obstacle_index+1),:,:] = meshColors
 
         self.obstacles_3d = gl.GLMeshItem(vertexes= self.fullMesh,  # defines the triangular mesh (Nx3x3)

@@ -50,7 +50,7 @@ class GridWorld():
         """
         Desc: Initialize state labels (0,0),(0,1),(0,2)
             ...(world_size[0],world_size[0])
-        
+
         Input(s):
             none
         Output(s):
@@ -66,7 +66,7 @@ class GridWorld():
         Desc: Generates all obstacles with penalty. This is selected by
             picking the first num_obstacles spots. Also removes occupied
             spots.
-        
+
         Input(s):
             penalty:    Penalty incurred for each obstacle
         Output(s):
@@ -92,7 +92,7 @@ class GridWorld():
         """
         Desc: Generate goal on the gridworld. This is done by choosing a
             random spot.
-        
+
         Input(s):
             reward: reward designated for this goal
         Output(s):
@@ -107,7 +107,7 @@ class GridWorld():
         """
         Desc: Generate agent on the gridworld. This is done by choosing a
             random spot.
-        
+
         Input(s):
             reward: reward designated for this goal
         Output(s):
@@ -120,10 +120,10 @@ class GridWorld():
 
     def choose_spot(self):
         """
-        Desc: Choose random location. It is randomized by the way 
+        Desc: Choose random location. It is randomized by the way
             spots are generated. So the next spot is selected.
-            After a spot is used for an obstacle, goal, agent, etc., it 
-            is removed from the possible spots to remove the chance of 
+            After a spot is used for an obstacle, goal, agent, etc., it
+            is removed from the possible spots to remove the chance of
             objects being overlaid ontop of each other
 
         Input(s):
@@ -142,7 +142,7 @@ class GridWorld():
 
     def update(self, actions):
         """
-        Desc: Update gridworld based on computed actions. 
+        Desc: Update gridworld based on computed actions.
 
         Input(s):
             actions:    actions computed
@@ -152,7 +152,7 @@ class GridWorld():
         for i, agent in enumerate(self.agents):
             logging.debug('Agent %d: %d, %d, %d' % (i, agent.pos[0], agent.pos[1], agent.reward))
             next_pos = agent.next_state(actions[i])
-            
+
             if not agent.phase:
                 for obstacle_index in agent.obs:
                     if np.array_equal(next_pos, self.obstacles[obstacle_index].pos):
@@ -160,9 +160,9 @@ class GridWorld():
                                                                                 self.obstacles[obstacle_index].pos[0],
                                                                                 self.obstacles[obstacle_index].pos[1]))
                         actions[i] = None
-            if ((next_pos[0] < 0) or 
-                (next_pos[0] >= self.world_size[0]) or 
-                (next_pos[1] < 0) or
+            if ((next_pos[0] < 0.) or
+                (next_pos[0] >= self.world_size[0]) or
+                (next_pos[1] < 0.) or
                 (next_pos[1] >= self.world_size[1])):
                 # can add penalty for trying to leave world here
                 logging.debug('Agent %d attempted to travel out of world' % i)
@@ -172,11 +172,27 @@ class GridWorld():
             agent.set_next_action(actions[i])
             nearby_obs = np.where(np.all(np.abs(self.obstacle_indices-agent.pos) <= self.agent_vision_depth, axis=1))[0]
             agent.observe(nearby_obs)
-            for goal in self.goals:
-                if np.array_equal(agent.pos, goal.pos):
-                    agent.update_reward(goal.reward)
-            if agent.phase:
-                for obstacle_index in agent.obs:
-                    if np.array_equal(next_pos, self.obstacles[obstacle_index].pos):
-                        agent.update_reward(self.obstacles[obstacle_index].penalty)
+            current_reward = self.check_reward(agent,next_pos)
+            agent.update_reward(current_reward)
 
+    def check_reward(self,agent,state):
+        """
+        Desc: returns reward for taking an action at a state
+        currently this is implemented only based on the new state
+
+        Input(s):
+            agent: agent class instance
+            state: current agent position
+        Output(s):
+            reward: return reward
+
+        """
+        for goal in self.goals:
+            if np.array_equal(state, goal.pos):
+                return goal.reward
+        if agent.phase:
+            for obstacle_index in agent.obs:
+                if np.array_equal(state, self.obstacles[obstacle_index].pos):
+                    return self.obstacles[obstacle_index].penalty
+        else:
+            return 0.0

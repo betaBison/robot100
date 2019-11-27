@@ -14,20 +14,22 @@ class Agent():
         self.reward = reward        # agent's current reward
         self.obs = []               # agent's currently observable obstacles
         self.next_action = None
-        self.phase = phase
-
+        self.phase = phase          # False = collision checking
+        self.possible_actions = [0,1,2,3]
     # Actions are:
     # 0 - left
     # 1 - right
     # 2 - up
     # 3 - down
+
+
     def next_state(self, action):
         pos = np.array(self.pos, copy=True)
         if (action == 0):
             pos[0] -= 1
         elif (action == 1):
             pos[0] += 1
-        elif (action == 2): 
+        elif (action == 2):
             pos[1] += 1
         elif (action == 3):
             pos[1] -= 1
@@ -36,7 +38,7 @@ class Agent():
         else:
             logging.warning("Unrecognized action. Agent remaining still.")
         return pos
-    
+
     def set_next_state(self, state):
         self.pos = state
 
