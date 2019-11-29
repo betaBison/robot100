@@ -175,6 +175,17 @@ class GridWorld():
             current_reward = self.check_reward(agent,next_pos)
             agent.update_reward(current_reward)
 
+    def conform_state_to_bounds(self,state):
+        while state[0] < 0.0:
+            state[0] += 1
+        while state[0] >= self.world_size[0]:
+            state[0] -= 1
+        while state[1] < 0.0:
+            state[1] += 1
+        while state[1] >= self.world_size[1]:
+            state[1] -= 1
+        return state
+
     def check_reward(self,agent,state):
         """
         Desc: returns reward for taking an action at a state
@@ -194,5 +205,6 @@ class GridWorld():
             for obstacle_index in agent.obs:
                 if np.array_equal(state, self.obstacles[obstacle_index].pos):
                     return self.obstacles[obstacle_index].penalty
+            return 0.0
         else:
             return 0.0

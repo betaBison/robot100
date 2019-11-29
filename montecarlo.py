@@ -36,7 +36,7 @@ class MonteCarlo(Thread):
             self.Q.append(np.zeros((self.gridworld.world_size[0],
                                     self.gridworld.world_size[1],
                                     len(agent.possible_actions))))
-            self.N.append(np.zeros((self.gridworld.world_size[0],
+            self.N.append(np.ones((self.gridworld.world_size[0],
                                     self.gridworld.world_size[1],
                                     len(agent.possible_actions))))
 
@@ -55,7 +55,7 @@ class MonteCarlo(Thread):
             if self.mode == 0:      # monte carlo mode
                 # DMU book Algorithm 4.9 Monte Carlo tree search
                 for agent_num in range(len(self.gridworld.agents)):
-                    new_action = self.mc_select_action(agent_num,self.gridworld.agents[agent_num].pos,100)
+                    new_action = self.mc_select_action(agent_num,self.gridworld.agents[agent_num].pos,10)
                     actions.append(new_action)
             elif self.mode == 1:    # direct mode
                 for agent in self.gridworld.agents:
@@ -114,7 +114,7 @@ class MonteCarlo(Thread):
         best_action = best_index[2]
         # print("select action best index",best_index," out of ",self.Q[agent_num].shape)
         # print("best action seems to be ",best_index[2])
-        print("returning best action",best_action)
+        # print("returning best action",best_action)
         return best_action
 
     def mc_simulate(self,agent_num,s,d):
@@ -133,18 +133,20 @@ class MonteCarlo(Thread):
                     # in the search DMU book eq. 4.36
         gamma = 0.8 # discount factor
         if d == 0:
-            return 0
+            return 0.0
         if s.tolist() not in self.T[agent_num]:
             for a in self.gridworld.agents[agent_num].possible_actions:
                 # previously initialized self.N and self.Q
                 # to zero
                 pass
             self.T[agent_num].append(s.tolist())
-            print("adding state",s.tolist())
+            # print("adding state",s.tolist())
             return self.direct_to_goal(self.gridworld.agents[agent_num])
         a = self.argmaximize(agent_num,c)
-        s_prime = self.gridworld.agents[agent_num].next_state(a)
+        s_prime = self.gridworld.agents[agent_num].generative_model(s,a)
+        s_prime = self.gridworld.conform_state_to_bounds(s_prime)
         r = self.gridworld.check_reward(self.gridworld.agents[agent_num],s_prime)
+        # print("outputs",r,gamma,result,agent_num,s_prime,d-1)
         q = r + gamma*self.mc_simulate(agent_num,s_prime,d-1)
         self.N[agent_num][s[0],s[1],a] += 1
         self.Q[agent_num][s[0],s[1],a] += (q-self.Q[agent_num][s[0],s[1],a])/self.N[agent_num][s[0],s[1],a]
@@ -162,22 +164,16 @@ class MonteCarlo(Thread):
         Output(s):
             a: arg max of array
         """
-
-        search_idx = np.where(self.N[agent_num] > 0)
-        # print("indexes",search_idx)
-        search_spots = [search_idx[0].tolist(),search_idx[1].tolist(),search_idx[2].tolist()]
-        # print("search spots",search_spots)
-        if len(search_spots[0]) < 1:
-            return self.direct_to_goal(self.gridworld.agents[agent_num])
-        # print("search spots",search_spots)
-        total = self.Q[agent_num][search_spots] \
-                + c*np.sqrt(np.log(np.sum(self.N[agent_num][search_spots[0],search_spots[1],:])) \
-                / self.N[agent_num][search_spots])
+        total = np.zeros((self.Q[agent_num].shape))
+        for ii in range(total.shape[2]):
+            total[:,:,ii] = self.Q[agent_num][:,:,ii] \
+                     + c*np.sqrt(np.log(np.sum(self.N[agent_num],axis=2)) \
+                     / self.N[agent_num][:,:,ii])
         # print("Q",self.Q)
         # print("total",total)
-        best_index = np.argmax(total)
+        best_index = np.unravel_index(np.argmax(total),total.shape)
         # print("select action best index",best_index," out of ",total.shape)
-        best_action = search_spots[2][best_index]
+        best_action = best_index[2]
         # print("best action seems to be ",best_action)
 
         return best_action
