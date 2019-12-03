@@ -7,11 +7,11 @@ Desc:       Monte Carlo Search
 import time
 import logging
 import random
-from threading import Thread
+# from threading import Thread
 
 import numpy as np
 
-class MonteCarlo(Thread):
+class MonteCarlo():
     """
     """
     def __init__(self, gridworld, mode):
@@ -23,7 +23,7 @@ class MonteCarlo(Thread):
                 1 - random
                 2 - monte carlo
         """
-        Thread.__init__(self)
+        # Thread.__init__(self)
         self.gridworld = gridworld
         self.mode = mode
 
@@ -41,12 +41,13 @@ class MonteCarlo(Thread):
             if self.mode == 0:
                 for agent in self.gridworld.agents:
                     actions.append(0)
+                time.sleep(0.1)
             elif self.mode == 1:
                 for agent in self.gridworld.agents:
                     dist = np.inf
                     nearest_goal = None
                     for goal in self.gridworld.goals:
-                        if (((goal.pos[0]-agent.pos[0])**2 
+                        if (((goal.pos[0]-agent.pos[0])**2
                             + (goal.pos[1]-agent.pos[1])**2)**0.5 < dist):
                             nearest_goal = goal
                     dist = nearest_goal.pos - agent.pos
@@ -57,10 +58,11 @@ class MonteCarlo(Thread):
                         action = 2 if dist[1] > 0 else 3
                     if (dist[0] == 0 and dist[1] == 0):
                         action = None
-                    actions.append(action)    
+                    actions.append(action)
+                time.sleep(0.1)
             elif self.mode == 2:
                 for agent in self.gridworld.agents:
                     actions.append(random.randint(0, 3))
-                    
+                time.sleep(0.1)
+
             self.gridworld.update(actions)
-            time.sleep(1)
