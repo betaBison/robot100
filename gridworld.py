@@ -172,12 +172,38 @@ class GridWorld():
             agent.set_next_action(actions[i])
             nearby_obs = np.where(np.all(np.abs(self.obstacle_indices-agent.pos) <= self.agent_vision_depth, axis=1))[0]
             agent.observe(nearby_obs)
-            for goal in self.goals:
-                if np.array_equal(agent.pos, goal.pos):
-                    agent.update_reward(goal.reward)
-            if agent.phase:
-                for obstacle_index in agent.obs:
-                    if np.array_equal(next_pos, self.obstacles[obstacle_index].pos):
-                        agent.update_reward(self.obstacles[obstacle_index].penalty)
-
+            current_reward = self.check_reward(agent,next_pos)
+            agent.update_reward(current_reward)
         self.visualization.run()
+
+    def conform_state_to_bounds(self,state):
+        while state[0] < 0.0:
+            state[0] += 1
+        while state[0] >= self.world_size[0]:
+            state[0] -= 1
+        while state[1] < 0.0:
+            state[1] += 1
+        while state[1] >= self.world_size[1]:
+            state[1] -= 1
+        return state
+
+    def check_reward(self,agent,state):
+        """
+        Desc: returns reward for taking an action at a state
+        currently this is implemented only based on the new state
+        Input(s):
+            agent: agent class instance
+            state: current agent position
+        Output(s):
+            reward: return reward
+        """
+        for goal in self.goals:
+            if np.array_equal(state, goal.pos):
+                return goal.reward
+        if agent.phase:
+            for obstacle_index in agent.obs:
+                if np.array_equal(state, self.obstacles[obstacle_index].pos):
+                    return self.obstacles[obstacle_index].penalty
+            return 0.0
+        else:
+            return 0.0

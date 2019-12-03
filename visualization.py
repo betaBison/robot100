@@ -1,5 +1,5 @@
 """
-Author(s):  D. Knowles
+Author(s):  AA228 group
 Date:       Nov 12, 2019
 Desc:       3D visualization of grid world
 """
@@ -51,6 +51,7 @@ class Visualization():
         self.w.opts['center'] = QVector3D(self.gridworld.world_size[0]/2.,
                                           self.gridworld.world_size[1]/2.,
                                           np.sqrt(self.gridworld.world_size[0]**2+self.gridworld.world_size[1]**2))
+        print("camera position",self.w.opts['center'])
         self.w.show()                                   # show the window
         self.w.setBackgroundColor('k')                  # set background color, option
         self.w.raise_()                                 # bring window to the front
