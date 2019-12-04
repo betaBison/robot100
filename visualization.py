@@ -51,7 +51,6 @@ class Visualization():
         self.w.opts['center'] = QVector3D(self.gridworld.world_size[0]/2.,
                                           self.gridworld.world_size[1]/2.,
                                           np.sqrt(self.gridworld.world_size[0]**2+self.gridworld.world_size[1]**2))
-        print("camera position",self.w.opts['center'])
         self.w.show()                                   # show the window
         self.w.setBackgroundColor('k')                  # set background color, option
         self.w.raise_()                                 # bring window to the front
@@ -64,6 +63,7 @@ class Visualization():
         # draw agents and goals
         self.draw_agents()
         self.draw_goals()
+        self.draw_mc_trees()
 
     def draw_grid(self):
         """
@@ -350,3 +350,15 @@ class Visualization():
                       drawEdges=False,  # draw edges between mesh elements
                       smooth=False,  # speeds up rendering
                       computeNormals=False)  # speeds up rendering
+
+    def draw_mc_trees(self):
+        default_lines = [[[0.,0.],[0.,0.]]]
+        default_lines = np.asarray(default_lines)
+        self.mc_trees = gl.GLLinePlotItem(pos=default_lines,color=(1.0,1.0,0.0,0.01),width=1.0,mode='lines')
+        self.mc_trees.setGLOptions('additive')
+        self.w.addItem(self.mc_trees)
+        # allows them to be semi-transparent
+
+    def update_mc_trees(self,pts):
+        self.mc_trees.setData(pos=pts)
+        self.app.processEvents()

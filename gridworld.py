@@ -17,7 +17,7 @@ from obstacles import Obstacle
 from goal import Goal
 
 class GridWorld():
-    def __init__(self, world_size, world_delta, obs_percent, agent_vision_depth, phase, rewards=10, penalty=-10, barrier_mode=0):
+    def __init__(self, world_size, world_delta, obs_percent, agent_vision_depth, phase, rewards=10., penalty=-10., barrier_mode=0):
         """
         Desc: runs when instance of Visualization class is created
 
@@ -200,7 +200,7 @@ class GridWorld():
         for goal in self.goals:
             if np.array_equal(state, goal.pos):
                 return goal.reward
-        if agent.phase:
+        if not agent.phase:
             for obstacle_index in agent.obs:
                 if np.array_equal(state, self.obstacles[obstacle_index].pos):
                     return self.obstacles[obstacle_index].penalty

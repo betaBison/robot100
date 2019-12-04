@@ -33,7 +33,7 @@ class Agent():
             s_prime: next state
         """
         rand = np.random.rand()
-        if rand > 0.8:
+        if rand > 0.95:
             # choose random action with some probability
             action = np.random.randint(0,4)
         s_prime = s
@@ -50,7 +50,7 @@ class Agent():
         else:
             logging.warning("Unrecognized action. Agent remaining still.")
         return s_prime
-        
+
     def next_state(self, action):
         pos = np.array(self.pos, copy=True)
         if (action == 0):
