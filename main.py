@@ -23,15 +23,12 @@ def main(args):
     # initializations
     gridworld = GridWorld(args.size, args.interval, args.obstacles, args.vision, args.phase)
     logging.info("Generated grid world!")
-    viz = Visualization(gridworld)
+    # viz = Visualization(gridworld)
     logging.info("Visuals created")
     mc = MonteCarlo(gridworld, mode=args.method)
     logging.info("Initialized Monte Carlo method")
-    
-    mc.start()
-    viz.start()
-    viz.app.exec_()
-        
+
+    mc.run()
 
 if __name__ == '__main__':
     import argparse

@@ -1,5 +1,5 @@
 """
-Author(s):  D. Knowles
+Author(s):  AA228 group
 Date:       Nov 12, 2019
 Desc:       3D visualization of grid world
 """
@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import pyqtgraph as pg
 from PyQt5 import QtWidgets
+from PyQt5.QtGui import QVector3D
 import time
 
 RED                 = np.array([1., 0., 0., 1])
@@ -21,7 +22,7 @@ GREY                = np.array([0.6, 0.6, 0.6, 1])
 LIGHT_GREY          = np.array([0.9, 0.9, 0.9, 1])
 TRANSPARENT_GREY    = np.array([0.7, 0.7, 0.7, 0.4])
 
-class Visualization(QtCore.QThread):
+class Visualization():
     def __init__(self, gridworld, view_axis=False):
         """
         Desc: runs when instance of Visualization class is created
@@ -36,15 +37,20 @@ class Visualization(QtCore.QThread):
         self.offset = self.gridworld.world_delta/2.           # place objects in middle of grid box
 
         # setup the graphics window
-        QtCore.QThread.__init__(self)
+        # QtCore.QThread.__init__(self)
         pg.setConfigOptions(antialias=True)             # set pyqtgraph options
         self.app = QtGui.QApplication([])               # create QT application
         self.w = gl.GLViewWidget()                      # create view widget
         self.w.setWindowTitle('AA228 Robot100')         # set title of window
         sg = QtWidgets.QDesktopWidget().availableGeometry()             # get native window geometry
         self.w.setGeometry(sg.width()/2.,sg.height()/3.,sg.width()/2.,sg.height()/2.)   # place window on right half of screen
+        # self.w.setCameraPosition(distance=0.7*np.sqrt(self.gridworld.world_size[0]**2+self.gridworld.world_size[1]**2),
+                            # elevation=40, azimuth=-135) # set initial camera position
         self.w.setCameraPosition(distance=0.7*np.sqrt(self.gridworld.world_size[0]**2+self.gridworld.world_size[1]**2),
-                            elevation=40, azimuth=-135) # set initial camera position
+                            elevation=90, azimuth=0)
+        self.w.opts['center'] = QVector3D(self.gridworld.world_size[0]/2.,
+                                          self.gridworld.world_size[1]/2.,
+                                          np.sqrt(self.gridworld.world_size[0]**2+self.gridworld.world_size[1]**2))
         self.w.show()                                   # show the window
         self.w.setBackgroundColor('k')                  # set background color, option
         self.w.raise_()                                 # bring window to the front
@@ -57,7 +63,8 @@ class Visualization(QtCore.QThread):
         # draw agents and goals
         self.draw_agents()
         self.draw_goals()
-    
+        self.draw_mc_trees()
+
     def draw_grid(self):
         """
         Desc: Visualize the grid
@@ -71,8 +78,8 @@ class Visualization(QtCore.QThread):
         grid.setSize(x=self.gridworld.world_size[0],y=self.gridworld.world_size[1])
         grid.setSpacing(x=self.gridworld.world_delta, y=self.gridworld.world_delta)
         grid.translate(self.gridworld.world_size[0]/2., self.gridworld.world_size[1]/2., 0.)    # translate so that it starts at (0,0)
-        
-        self.w.addItem(grid)    
+
+        self.w.addItem(grid)
 
     def get_boundary(self):
         """
@@ -140,7 +147,7 @@ class Visualization(QtCore.QThread):
         bound_mesh_colors[:,:] = TRANSPARENT_GREY
 
         return bound_mesh,bound_mesh_colors
-    
+
     def draw_boundaries(self):
         """
         Desc: Draw the gridworld boundaries
@@ -157,7 +164,7 @@ class Visualization(QtCore.QThread):
                                  smooth=False)                  # speeds up rendering
                                  #computeNormals=False)         # speeds up rendering
         boundary.setGLOptions('additive')                       # allows them to be semi-transparent
-        self.w.addItem(boundary)   
+        self.w.addItem(boundary)
 
     def draw_axes(self):
         """
@@ -167,7 +174,7 @@ class Visualization(QtCore.QThread):
             none
         Output(s):
             none
-        """        
+        """
         # add all three colored axes
         xaxis_pts = np.array([[0.0,0.0,0.0],            # north axis start and end point
                         [1.1*self.gridworld.world_size[0],0.0,0.0]])
@@ -180,7 +187,7 @@ class Visualization(QtCore.QThread):
         zaxis_pts = np.array([[0.0,0.0,0.0],            # down axis start and end point
                         [0.0,0.0,5.0*self.gridworld.world_delta]])
         zaxis = gl.GLLinePlotItem(pos=zaxis_pts,color=pg.glColor('b'),width=3.0)   # create line plot item
-        self.w.addItem(zaxis)   
+        self.w.addItem(zaxis)
 
     def draw_obstacles(self):
         """
@@ -298,22 +305,21 @@ class Visualization(QtCore.QThread):
         Output(s):
             none
         """
-        while True:
-            for i, agent in enumerate(self.gridworld.agents):
-                if agent.next_action == 0:
-                    self.agents_3d[i].translate(-self.gridworld.world_delta,0,0)
-                elif agent.next_action == 1:
-                    self.agents_3d[i].translate(self.gridworld.world_delta,0,0)
-                elif agent.next_action == 2:
-                    self.agents_3d[i].translate(0,self.gridworld.world_delta,0)
-                elif agent.next_action == 3:
-                    self.agents_3d[i].translate(0,-self.gridworld.world_delta,0)
-                elif agent.next_action == None:
-                    pass
-                agent.set_next_action(None)
+        for i, agent in enumerate(self.gridworld.agents):
+            if agent.next_action == 0:
+                self.agents_3d[i].translate(-self.gridworld.world_delta,0,0)
+            elif agent.next_action == 1:
+                self.agents_3d[i].translate(self.gridworld.world_delta,0,0)
+            elif agent.next_action == 2:
+                self.agents_3d[i].translate(0,self.gridworld.world_delta,0)
+            elif agent.next_action == 3:
+                self.agents_3d[i].translate(0,-self.gridworld.world_delta,0)
+            elif agent.next_action == None:
+                pass
+            agent.set_next_action(None)
 
-            self.update_detected_obstacles()
-            self.app.processEvents()
+        self.update_detected_obstacles()
+        self.app.processEvents()
 
     def update_detected_obstacles(self):
         """
@@ -336,7 +342,7 @@ class Visualization(QtCore.QThread):
             else:
                 meshColors[:8] = GREY
                 meshColors[8:] = LIGHT_GREY
-            
+
             self.fullMeshcolors[obstacle_index*10:10*(obstacle_index+1),:,:] = meshColors
 
         self.obstacles_3d = gl.GLMeshItem(vertexes= self.fullMesh,  # defines the triangular mesh (Nx3x3)
@@ -344,3 +350,15 @@ class Visualization(QtCore.QThread):
                       drawEdges=False,  # draw edges between mesh elements
                       smooth=False,  # speeds up rendering
                       computeNormals=False)  # speeds up rendering
+
+    def draw_mc_trees(self):
+        default_lines = [[[0.,0.],[0.,0.]]]
+        default_lines = np.asarray(default_lines)
+        self.mc_trees = gl.GLLinePlotItem(pos=default_lines,color=(1.0,1.0,0.0,0.01),width=1.0,mode='lines')
+        self.mc_trees.setGLOptions('additive')
+        self.w.addItem(self.mc_trees)
+        # allows them to be semi-transparent
+
+    def update_mc_trees(self,pts):
+        self.mc_trees.setData(pos=pts)
+        self.app.processEvents()
