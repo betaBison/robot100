@@ -41,6 +41,7 @@ class MonteCarlo():
                                     len(agent.possible_actions))))
 
         self.mc_trees = []          # state points for visualization
+        self.counter = 0
 
     def run(self):
         """
@@ -60,8 +61,8 @@ class MonteCarlo():
                     state_copy = self.gridworld.agents[agent_num].pos.copy()
                     new_action = self.mc_select_action(agent_num,state_copy,200)
                     actions.append(new_action)
-                    self.mc_trees = np.asarray(self.mc_trees)
-                    self.gridworld.visualization.update_mc_trees(self.mc_trees)
+                    mc_trees_object = np.asarray(self.mc_trees)
+                    self.gridworld.visualization.update_mc_trees(mc_trees_object)
             elif self.mode == 1:
                 for agent in self.gridworld.agents:
                      action = self.direct_to_goal(agent)
@@ -194,6 +195,13 @@ class MonteCarlo():
 
         # add the state to the graph for visualization
         self.mc_trees.append([[s[0]+0.5,s[1]+0.5],[s_prime[0]+0.5,s_prime[1]+0.5]])
+
+        # update visualization every 100 loops
+        self.counter += 1
+        if self.counter % 100 == 0:
+            mc_trees_object = np.asarray(self.mc_trees)
+            self.gridworld.visualization.update_mc_trees(mc_trees_object)
+        
         return q
 
 
