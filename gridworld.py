@@ -56,9 +56,9 @@ class GridWorld():
         Output(s):
             spots:  Randomized list of coordinates for spots
         """
-        spots = np.zeros((self.world_size[0], self.world_size[1], 3), dtype=int)
-        spots[:,:,0] = np.arange(self.world_size[0])
-        spots[:,:,1] = np.arange(self.world_size[1]).reshape((self.world_size[1], 1))
+        spots = np.zeros((self.world_size[1], self.world_size[0], 3), dtype=int)
+        spots[:,:,0] = np.array([list(range(self.world_size[0]))]*self.world_size[1])
+        spots[:,:,1] = np.array([list(range(self.world_size[1]))]*self.world_size[0]).transpose()
         return spots
 
     def generate_obstacles(self, penalty):
