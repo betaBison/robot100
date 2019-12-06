@@ -13,7 +13,7 @@ To see all available execution options, run `python3 main.py -h`
 
 Some typical parameters:
 
-Size of gridworld: -s (int) (int) (right now, the two dimensions have to be equal)
+Size of gridworld: -s (int) (int)
 
 Percentage of spots are obstacles: -o (float)
 
