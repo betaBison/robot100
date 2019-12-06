@@ -10,9 +10,13 @@ Install needed dependencies:
 
 ## Option
 To see all available execution options, run `python3 main.py -h`
+
 Some typical parameters:
+
 Size of gridworld: -s (int) (int) (right now, the two dimensions have to be equal)
+
 Percentage of spots are obstacles: -o (float)
+
 Method: -m (0: monte carlo (default), 1: direct, 2: random)
 
 
