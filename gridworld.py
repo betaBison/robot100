@@ -64,8 +64,7 @@ class GridWorld():
     def generate_obstacles(self, penalty):
         """
         Desc: Generates all obstacles with penalty. This is selected by
-            picking the first num_obstacles spots. Also removes occupied
-            spots.
+            picking the spots randomly. Also removes occupied spots.
 
         Input(s):
             penalty:    Penalty incurred for each obstacle

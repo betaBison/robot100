@@ -17,9 +17,10 @@ class MonteCarlo():
         Initializes monte carlo array
 
         Input(s)
-        mode:   0 - direct
-                1 - random
-                2 - monte carlo
+        mode:   
+                0 - monte carlo
+                1 - direct
+                2 - random
         """
         self.gridworld = gridworld
         self.mode = mode
@@ -42,12 +43,12 @@ class MonteCarlo():
 
     def run(self):
         """
-        Desc: Compute monte carlo action
+        Desc: Select action and update gridworld, visualization
 
         Input(s):
-
+            None
         Output(s):
-            action
+            None
         """
         while True:
             actions = []
