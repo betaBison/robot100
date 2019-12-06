@@ -352,13 +352,29 @@ class Visualization():
                       computeNormals=False)  # speeds up rendering
 
     def draw_mc_trees(self):
+        """
+        Desc: initializes the monte carlo trees
+
+        Input(s):
+            none
+        Output(s):
+            none
+        """
         default_lines = [[[0.,0.],[0.,0.]]]
         default_lines = np.asarray(default_lines)
-        self.mc_trees = gl.GLLinePlotItem(pos=default_lines,color=(1.0,1.0,0.0,0.01),width=1.0,mode='lines')
+        self.mc_trees = gl.GLLinePlotItem(pos=default_lines,color=(1.0,1.0,0.0,0.01),width=6.0,mode='lines')
         self.mc_trees.setGLOptions('additive')
         self.w.addItem(self.mc_trees)
         # allows them to be semi-transparent
 
     def update_mc_trees(self,pts):
+        """
+        Desc: updates the monte carlo trees
+
+        Input(s):
+            pts: new line segments
+        Output(s):
+            none
+        """
         self.mc_trees.setData(pos=pts)
         self.app.processEvents()

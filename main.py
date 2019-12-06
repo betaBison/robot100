@@ -23,7 +23,6 @@ def main(args):
     # initializations
     gridworld = GridWorld(args.size, args.interval, args.obstacles, args.vision, args.phase)
     logging.info("Generated grid world!")
-    # viz = Visualization(gridworld)
     logging.info("Visuals created")
     mc = MonteCarlo(gridworld, mode=args.method)
     logging.info("Initialized Monte Carlo method")
@@ -41,7 +40,7 @@ if __name__ == '__main__':
                         help='Percentage of obstacles in world. Default is 0.1')
     parser.add_argument('-vi', '--vision', default=2, type=float,
                         help='Depth of vision of agent. Default is 2')
-    parser.add_argument('-m', '--method', default=2, type=int,
+    parser.add_argument('-m', '--method', default=0, type=int,
                         help='Method to adopt to solve. Modes: 0 - Monte Carlo, 1 - Direct, 2 - Random. Default is 2 (in beta)')
     parser.add_argument('-p', '--phase', action='store_true',
                         help='Whether or not agent can phase through obstacles. Default is off.')

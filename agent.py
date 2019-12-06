@@ -33,7 +33,7 @@ class Agent():
             s_prime: next state
         """
         rand = np.random.rand()
-        if rand > 0.95:
+        if rand > 0.8:
             # choose random action with some probability
             action = np.random.randint(0,4)
         s_prime = s

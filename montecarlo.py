@@ -7,8 +7,6 @@ Desc:       Monte Carlo Search
 import time
 import logging
 import random
-# from threading import Thread
-
 import numpy as np
 
 class MonteCarlo():
@@ -23,7 +21,6 @@ class MonteCarlo():
                 1 - random
                 2 - monte carlo
         """
-        # Thread.__init__(self)
         self.gridworld = gridworld
         self.mode = mode
 
@@ -124,7 +121,6 @@ class MonteCarlo():
             action = None
         return action
 
-
     def mc_select_action(self,agent_num,s,d):
         """
         Desc: Compute monte carlo action
@@ -140,13 +136,7 @@ class MonteCarlo():
         loop_time = 2.0
         while (time.time() - time0) < loop_time:
             self.mc_simulate(agent_num,s,d)
-        # best_index = np.unravel_index(np.argmax(self.Q[agent_num][]),self.Q[agent_num].shape)
-        # best_action = best_index[2]
         best_action = np.argmax(self.Q[agent_num][s[0],s[1],:])
-        # print("best action",self.Q[agent_num][s[0],s[1],:],best_action)
-        # print("select action best index",best_index," out of ",self.Q[agent_num].shape)
-        # print("best action seems to be ",best_index[2])
-        # print("returning best action",best_action)
         return best_action
 
     def mc_simulate(self,agent_num,s,d):
@@ -163,34 +153,35 @@ class MonteCarlo():
         c = 2.0     # parameter that controls the amount of exploration
                     # in the search DMU book eq. 4.36
         gamma = 0.8 # discount factor
+
         if d == 0:
+            # if depth is zero get out
             return 0.0
-        # if s.tolist() not in self.T[agent_num]:
-        #     for a in self.gridworld.agents[agent_num].possible_actions:
-        #         # previously initialized self.N and self.Q
-        #         # to zero
-        #         pass
-        #     self.T[agent_num].append(s.tolist())
-        #     # print("adding state",s.tolist())
-        #     return 0.0 #self.direct_to_goal(self.gridworld.agents[agent_num])
+
         sd = np.abs(s-self.gridworld.agents[agent_num].pos) # state difference
         if sd[0] <= self.gridworld.agent_vision_depth and sd[1] <= self.gridworld.agent_vision_depth:
-            # near the current position
+            # near the current position use argmax
             a = self.argmaximize(agent_num,s,c)
         else:
-            # far from the current position
+            # far from the current position use direct to goal
             a = self.direct_to_goal_with_state(self.gridworld.agents[agent_num],s)
 
+        # next state based on generative model
         s_prime = self.gridworld.agents[agent_num].generative_model(s.copy(),a)
+        # next state shouldn't be outside of the arena
         s_prime = self.gridworld.conform_state_to_bounds(s_prime)
+        # get the reward of going into the next state
         r = self.gridworld.check_reward(self.gridworld.agents[agent_num],s_prime)
         if r > 0.0:
             # ends simulation if it reaches goal
             result = 0.0
         else:
+            # recursive simulation
             result = self.mc_simulate(agent_num,s_prime,d-1)
         q = r + gamma*result
+        # increment the count for number of times visited
         self.N[agent_num][s[0],s[1],a] += 1
+        # update the expected utility
         self.Q[agent_num][s[0],s[1],a] += (q-self.Q[agent_num][s[0],s[1],a])/self.N[agent_num][s[0],s[1],a]
 
         # add the state to the graph for visualization
@@ -201,7 +192,7 @@ class MonteCarlo():
         if self.counter % 100 == 0:
             mc_trees_object = np.asarray(self.mc_trees)
             self.gridworld.visualization.update_mc_trees(mc_trees_object)
-        
+
         return q
 
 
@@ -211,8 +202,8 @@ class MonteCarlo():
         DMU book eq. 4.36
         Input(s):
             agent_num: agent number
-            c: parameter that controls the amount of exploration
             s: current state
+            c: parameter that controls the amount of exploration
         Output(s):
             a: arg max of array
         """
@@ -229,6 +220,5 @@ class MonteCarlo():
                          / self.N[agent_num][x,y,ii])
 
         best_action = np.argmax(total)
-        # print("best action seems to be ",best_action)
 
         return best_action
